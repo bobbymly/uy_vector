@@ -19,7 +19,7 @@ int main()
 
     uy_vector<int> test;
 
-    for(int i=0;i<10;++i)
+    for(int i=0;i<100;++i)
     {
         test.push_back(i);
         for(int j=0;j<test.size();++j)

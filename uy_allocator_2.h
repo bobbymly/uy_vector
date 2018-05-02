@@ -128,7 +128,7 @@ void* uy_allocator_2<inst>::refill(size_t n)
     char* chunk = chunk_alloc(n,nobjs);
     obj** my_free_list;
     obj* result,*next_obj,*current_obj;
-    int i;
+    
 
     if(nobjs == 1)
     {

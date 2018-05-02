@@ -64,6 +64,8 @@ class uy_vector
 {
 
 public:
+
+    //迭代器直接使用指针
     typedef value_type* iterater;
     typedef value_type& reference;
     typedef ptrdiff_t difference_type;
@@ -97,6 +99,13 @@ public:
             ++ finish;
         }else{
             insert_aux(end(),target);
+
+
+
+
+
+
+
         }
     }
     void pop_back()
@@ -189,21 +198,23 @@ void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& ta
         //无可用空间时，申请新空间->复制原有对象->插入新对象->析构旧空间上的对象->释放旧的内存空间
 
         const size_t old_size = size();
-        const size_t len = old_size != 0 ? 2 * old_size : 1;
-        //iterater new_start = (iterater)malloc(sizeof(value_type)*len);
-        iterater new_start = data_allocator::allocate(len);
+        //扩容策略采用增大为原来的两倍
+        const size_t len = old_size != 0 ? (2 * old_size) : 1;
+        iterater new_start = (iterater)malloc(sizeof(value_type)*len);
+        //iterater new_start = data_allocator::allocate(len);
         iterater new_finish = new_start;
         cout<<"**"<<*new_start<<"**"<<endl;
         try
         {
             new_finish = uninitialized_copy(start,pos,new_start);
             // cout<<"*"<<new_finish<<endl;
-            iterater old_finish_pos = new_finish;
-            new_finish = uninitialized_copy(pos,finish,new_finish+1);
-            construct(old_finish_pos,target);
-            *old_finish_pos = target;
+            //iterater old_finish_pos = new_finish;
+            
+            construct(new_finish,target);
+            //*old_finish_pos = target;
             cout<<"*"<<*(new_finish-1)<<" "<<"target = "<<target<<"*"<<endl;
-            //++ new_finish;
+            ++ new_finish;
+            new_finish = uninitialized_copy(pos,finish,new_finish);
             
         }catch (...){
             destroy(new_start,new_finish);
