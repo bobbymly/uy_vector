@@ -21,7 +21,7 @@ public:
     static void* allocate(size_t size)
     {
         void* p = malloc(size);
-        if(p == nullptr)
+        if(p == NULL)
         {
             p = oom_malloc(size);
         }
@@ -36,7 +36,7 @@ public:
     static void* reallocate(void* p,size_t size)
     {
         void* result = realloc(p,size);
-        if(result == nullptr)
+        if(result == NULL)
         {
             result = oom_realloc(p,size);
         }

@@ -17,14 +17,14 @@ int main()
     // }
 
 
-    uy_vector<int> test;
+    uy_vector<double> test;
 
     for(int i=0;i<100;++i)
     {
         test.push_back(i);
         for(int j=0;j<test.size();++j)
         {
-            cout<<test[j]<<" "<<endl;
+            cout<<test[j]<<" size: "<<test.size()<<" capacity: "<<test.capacity()<<endl;
         }
         cout<<endl;
         

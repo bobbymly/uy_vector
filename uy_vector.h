@@ -1,5 +1,7 @@
 #include <iostream>
 #include <new>
+#include <string.h>
+#include <algorithm>
 #include "uy_allocator_2.h"
 #include "simple_alloc.h"
 using namespace std;
@@ -85,9 +87,9 @@ public:
     iterater begin() {return start;}
     iterater end() {return finish;}
     size_t size() const {return finish - start;}
-    size_t capacity() const {return end_of_storage - begin();}
-    bool empty() const {return end() == begin();}
-    reference operator [] (size_t n) {return *(begin() + n);}
+    size_t capacity() const {return end_of_storage - start;}
+    bool empty() const {return finish == start;}
+    reference operator [] (size_t n) {return *(start + n);}
     
     reference front() {return *begin();};
     reference back() {return *(end()-1);}
@@ -200,8 +202,8 @@ void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& ta
         const size_t old_size = size();
         //扩容策略采用增大为原来的两倍
         const size_t len = old_size != 0 ? (2 * old_size) : 1;
-        iterater new_start = (iterater)malloc(sizeof(value_type)*len);
-        //iterater new_start = data_allocator::allocate(len);
+        //iterater new_start = (iterater)malloc(sizeof(value_type)*len);
+        iterater new_start = data_allocator::allocate(len);
         iterater new_finish = new_start;
         cout<<"**"<<*new_start<<"**"<<endl;
         try
