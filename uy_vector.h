@@ -130,7 +130,7 @@ public:
     iterator erase(iterator first,iterator last)
     {
         destroy(first,last);
-        int i = copy(last,end(),first);
+        iterator i = copy(last,end(),first);
         destroy(i,end());
         finish = finish - (last - first);
         return first;
@@ -139,6 +139,22 @@ public:
     void clear() { erase(begin(),end());}
     void insert_aux(iterator pos,const value_type& target);
     void insert(iterator pos,size_t n,const value_type& target);
+
+    
+    void resize(size_t new_size,const value_type& target)
+    {
+        if(new_size < size())
+        {
+            erase(begin() + new_size,end());
+        }else{
+            insert(end(),new_size - size(),target);
+        }
+    }
+
+    void resize(size_t new_size)
+    {
+        resize(new_size,value_type());
+    }
 protected:
     //使用两级空间配置器 uy_allocator_2 封装的 simple_alloc
     typedef simple_alloc <value_type,Alloc> data_allocator;
@@ -163,20 +179,6 @@ protected:
 
     
 
-    void resize(size_t new_size,const value_type& target)
-    {
-        if(new_size < size())
-        {
-            erase(begin() + new_size,end());
-        }else{
-            insert(end(),new_size - size(),target);
-        }
-    }
-
-    void resize(size_t new_size)
-    {
-        resize(new_size,value_type());
-    }
 
 };
 

@@ -68,8 +68,9 @@ int main()
     uy_vector<uy_a>a_test;
     for(int i=0;i<5;++i)a_test.push_back(uy_a());
     
-    
-
+    cout<<"test resize()"<<endl;
+    test.resize(20,666);
+    show_vec(test);
 
     return 0;
 }
