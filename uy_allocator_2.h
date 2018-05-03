@@ -35,7 +35,7 @@ class uy_allocator_2
 
 
 private:
-    static obj*  free_list[__NFREE_LIST];
+    static obj* volatile free_list[__NFREE_LIST];
     static char* start_free;
     static char* end_free;
     static size_t heap_size;
@@ -43,7 +43,7 @@ private:
     //将需求的内存块大小提升为 8 的整数倍
     static size_t round_up(size_t bytes)
     {
-        return (bytes+__ALIGN-1) & ~(__ALIGN-1);
+        return ((bytes+__ALIGN-1) & ~(__ALIGN-1));
     }
 
     
@@ -77,15 +77,14 @@ char* uy_allocator_2<inst>::end_free = 0;
 template <int inst>
 size_t uy_allocator_2<inst>::heap_size = 0;
 
-template <int inst>
-
 //以链式结构管理内存
-obj* uy_allocator_2<inst>::free_list[__NFREE_LIST] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
+template <int inst>
+obj* volatile uy_allocator_2<inst>::free_list[__NFREE_LIST] = {0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0};
 
 template <int inst>
 void* uy_allocator_2<inst>::allocate(size_t n)
 {
-    obj** my_free_list;
+    obj* volatile * my_free_list;
     obj* result;
     //大于128就使用一级配置器
     if(n > (size_t) __MAX_BYTES)
@@ -96,7 +95,7 @@ void* uy_allocator_2<inst>::allocate(size_t n)
     my_free_list = free_list + free_list_index(n);
     result = *my_free_list;
     //先从 free_list 中找，若没有对应大小的内存块，就使用 refill 向 free_list 中填充内存块
-    if(result == NULL)
+    if(result == 0)
     {
         void* res = refill(round_up(n));
         return res;
@@ -109,14 +108,15 @@ template <int inst>
 void uy_allocator_2<inst>::deallocate(void* p,size_t size)
 {
     obj* q=(obj*) p;
-    obj** my_free_list;
-    if(size > __MAX_BYTES)
+    obj* volatile * my_free_list;
+    if(size >(size_t) __MAX_BYTES)
     {
         uy_allocator_1<inst>::deallocate(p,size);
         return ;
     }
     my_free_list =free_list + free_list_index(size);
     q->free_list_link = *my_free_list;
+    //cout<<"link"<<q->free_list_link<<endl;
     *my_free_list = q; 
 
 }
@@ -126,7 +126,7 @@ void* uy_allocator_2<inst>::refill(size_t n)
 {
     int nobjs = 20;
     char* chunk = chunk_alloc(n,nobjs);
-    obj** my_free_list;
+    obj* volatile * my_free_list;
     obj* result,*next_obj,*current_obj;
     
 
@@ -176,11 +176,11 @@ char* uy_allocator_2<inst>::chunk_alloc(size_t size,int& nobjs)
         return result;
     }else{      //剩余内存连一个区块都无法满足
                 
-        size_t bytes_to_get = 2 * total_bytes + round_up(heap_size >>4);
+        size_t bytes_to_get =min((size_t)128, 2 * total_bytes + round_up(heap_size >>4));
         //尝试把剩余内存编入 free_list
         if(bytes_left > 0)
         {
-            obj** my_free_list = free_list +free_list_index(bytes_left);
+            obj* volatile * my_free_list = free_list +free_list_index(bytes_left);
             ((obj*)start_free)->free_list_link = *my_free_list;
             *my_free_list = (obj*)start_free;
         }
@@ -190,7 +190,7 @@ char* uy_allocator_2<inst>::chunk_alloc(size_t size,int& nobjs)
         if(0 == start_free)
         {
             int i;
-            obj** my_free_list,*p;
+            obj* volatile * my_free_list,*p;
             //在 free_list 中找足够大的区块
             for(i = size;i <=__MAX_BYTES;i += __ALIGN)
             {

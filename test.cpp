@@ -2,53 +2,73 @@
 #include <iostream>
 using namespace std;
 
-// enum{__ALIGNTTT = 8};
-// static size_t round_up(size_t bytes)
-//     {
-//         return (bytes+__ALIGNTTT-1) & ~(__ALIGNTTT-1);
-//     }
+template <class T>
+void show_vec(uy_vector<T> &test)
+{
+    for(auto it = test.begin();it != test.end();++it)
+    {
+        cout<<*it<<" ";
+    }
+    cout<<endl;
+}
+
+
+//class for test
+class uy_a
+{
+public:
+    uy_a()
+    {
+        cout<< "uy_a() "<<endl;
+    }
+    ~uy_a()
+    {
+        cout<<"~uy_a() "<<endl;
+    }
+    uy_a(const uy_a& target)
+    {
+        cout<<"copy uy_a()"<<endl;
+    }
+    operator =(const uy_a& target)
+    {
+        cout<<"operator = uy_a()"<<endl;
+    }
+};
+
+
 int main()
 {
 
-    // for(int i=0;i<20;++i){
-    //     cout<<i<<":";
-    //     int temp = round_up((size_t) i);
-    //     cout<<temp<<endl;
-    // }
-
-
     uy_vector<double> test;
 
-    for(int i=0;i<100;++i)
+    for(int i=0;i<10;++i)
     {
         test.push_back(i);
-        for(int j=0;j<test.size();++j)
-        {
-            cout<<test[j]<<" size: "<<test.size()<<" capacity: "<<test.capacity()<<endl;
-        }
-        cout<<endl;
-        
-        
+        cout<<test[i]<<" size: "<<test.size()<<" capacity: "<<test.capacity()<<endl;
     }
 
 
+    cout<<endl;
+
+    cout<<"erase the begin of vector:"<<endl;
+    test.erase(test.begin());
+    show_vec(test);
     
-    // getchar();
-    // getchar();
-    // test.push_back(12321);
-    // cout<<test[0]<<endl;
-    // test.push_back(999);
-    // cout<<test[1]<<endl;
-    // test.push_back(1);
-    // cout<<test[2]<<endl;
-    // test.push_back(2);
-    // cout<<test[3]<<endl;
-    // test.push_back(3);
-    // cout<<test[4]<<endl;
-    // test.push_back(4);
-    // cout<<test[5]<<endl;
-    // cout<<"begin:"<<endl;
-    //  for(int i=0;i<test.size();++i)cout<<test[i]<<endl;
+    cout<<"pop_back of vector:"<<endl;
+    test.pop_back();
+    show_vec(test);
+
+    cout<<"insert(test.begin()+2,3,6"<<endl;
+    test.insert(test.begin()+2,3,6);
+    show_vec(test);
+
+
+    cout<<"test construct and destroy of obj"<<endl;
+    //测试 uy_vector 对于对象的构造和析构
+    uy_vector<uy_a>a_test;
+    for(int i=0;i<5;++i)a_test.push_back(uy_a());
+    
+    
 
     return 0;
 }

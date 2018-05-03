@@ -7,6 +7,15 @@
 using namespace std;
 
 
+template<class T> fill(T* pos,size_t n,const T& target)
+{
+    for(size_t i=0;i<n;++i)
+    {
+        *pos = target;
+        ++pos;
+    }
+}
+
 template <class T1,class T2>
 inline void construct(T1* p,const T2& target)
 {
@@ -21,7 +30,7 @@ inline T2 uninitialized_copy(T1 first,T1 last,T2 result_first)
 }
 
 
-
+//适配非基础数据类型进行析构
 template <class T>
 inline void destroy(T* p)
 {
@@ -101,42 +110,12 @@ public:
             ++ finish;
         }else{
             insert_aux(end(),target);
-
-
-
-
-
-
-
         }
     }
     void pop_back()
     {
         --finish;
         destroy(finish);
-    }
-
-
-protected:
-    typedef simple_alloc <value_type,Alloc> data_allocator;
-    iterater start;
-    iterater finish;
-    iterater end_of_storage;
-
-    void insert_aux(iterater pos,const value_type& target);
-    void insert(iterater pos,size_t n,const value_type& target);
-    void deallocate()
-    {
-        if(start)data_allocator::deallocate(start,end_of_storage-start);
-    }
-
-
-    void fill_initialized(size_t n,const value_type& target)
-    {
-        start = data_allocator::allocate(n);
-        uninitialized_fill_n(start,n,target);
-        finish = start + n;
-        end_of_storage = finish;
     }
 
     iterater erase(iterater pos)
@@ -157,6 +136,33 @@ protected:
         return first;
     }
 
+    void clear() { erase(begin(),end());}
+    void insert_aux(iterater pos,const value_type& target);
+    void insert(iterater pos,size_t n,const value_type& target);
+protected:
+    //使用两级空间配置器 uy_allocator_2 封装的 simple_alloc
+    typedef simple_alloc <value_type,Alloc> data_allocator;
+    iterater start;
+    iterater finish;
+    iterater end_of_storage;
+
+    
+    void deallocate()
+    {
+        if(start)data_allocator::deallocate(start,end_of_storage-start);
+    }
+
+
+    void fill_initialized(size_t n,const value_type& target)
+    {
+        start = data_allocator::allocate(n);
+        uninitialized_fill_n(start,n,target);
+        finish = start + n;
+        end_of_storage = finish;
+    }
+
+    
+
     void resize(size_t new_size,const value_type& target)
     {
         if(new_size < size())
@@ -171,17 +177,6 @@ protected:
     {
         resize(new_size,value_type());
     }
-
-    void clear() { erase(begin(),end());}
-
-
-
-
-
-
-
-
-
 
 };
 
@@ -205,7 +200,7 @@ void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& ta
         //iterater new_start = (iterater)malloc(sizeof(value_type)*len);
         iterater new_start = data_allocator::allocate(len);
         iterater new_finish = new_start;
-        cout<<"**"<<*new_start<<"**"<<endl;
+        //cout<<"**"<<*new_start<<"**"<<endl;
         try
         {
             new_finish = uninitialized_copy(start,pos,new_start);
@@ -214,14 +209,14 @@ void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& ta
             
             construct(new_finish,target);
             //*old_finish_pos = target;
-            cout<<"*"<<*(new_finish-1)<<" "<<"target = "<<target<<"*"<<endl;
+            //cout<<"*"<<*(new_finish-1)<<" "<<"target = "<<target<<"*"<<endl;
             ++ new_finish;
             new_finish = uninitialized_copy(pos,finish,new_finish);
             
         }catch (...){
             destroy(new_start,new_finish);
             data_allocator::deallocate(new_start,len);
-            cout<<"err"<<endl;
+            cout<<"err out of memory"<<endl;
             throw;
         }
 
@@ -245,17 +240,34 @@ void uy_vector<value_type,Alloc>::insert(iterater pos,size_t n,const value_type&
     {
         if(end_of_storage - finish >= n)
         {
-            copy_backward(pos,finish,pos+n);
-            fill(pos,n,target);
-            finish = finish + n;
+            const size_t elems_after = finish - pos;
+            const iterater old_finish = finish;
+
+            if(elems_after > n)
+            {
+                uninitialized_copy(finish - n,finish,finish);
+                finish += n;
+                copy_backward(pos,old_finish - n,old_finish);
+                fill(pos,pos+n,target);
+            }else{
+                uninitialized_fill_n(finish,n - elems_after,target);
+                finish += n-elems_after;
+                uninitialized_copy(pos,old_finish,finish);
+                finish += elems_after;
+                fill(pos,old_finish,target);
+            }
+            // copy_backward(pos,finish,pos+n);
+            // fill(pos,n,target);
+            // finish = finish + n;
         }else{
+            const size_t old_size = size();
             const size_t len = capacity() + max(capacity(),n);
             iterater new_start = data_allocator::allocate(len);
             iterater new_finish = new_start;
             
             try
             {
-                new_finish = uninitialized_copy(start,pos,new_finish);
+                new_finish = uninitialized_copy(start,pos,new_start);
                 new_finish = uninitialized_fill_n(new_finish,n,target);
                 new_finish = uninitialized_copy(pos,finish,new_finish);
             }catch (...){
@@ -268,15 +280,10 @@ void uy_vector<value_type,Alloc>::insert(iterater pos,size_t n,const value_type&
             destroy(start,finish);
             deallocate();
 
-
             start = new_start;
             finish = new_finish;
-            end_of_storage = start + len;
+            end_of_storage = new_start + len;
 
         }
-
-
-
-
     }
 }
