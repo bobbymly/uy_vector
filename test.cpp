@@ -13,7 +13,7 @@ void show_vec(uy_vector<T> &test)
 }
 
 
-//class for test
+//class for test uy_vector
 class uy_a
 {
 public:
@@ -69,6 +69,7 @@ int main()
     for(int i=0;i<5;++i)a_test.push_back(uy_a());
     
     
+
 
     return 0;
 }

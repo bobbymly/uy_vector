@@ -37,8 +37,8 @@ inline void destroy(T* p)
     p->~T();
 }
 
-template <class iterater>
-inline void destroy(iterater start,iterater finish)
+template <class iterator>
+inline void destroy(iterator start,iterator finish)
 {
     for(;start < finish;++start)
     {
@@ -47,8 +47,8 @@ inline void destroy(iterater start,iterater finish)
 }
 
 
-// template <class iterater,class Size,class T>
-// inline iterater uninitialized_fill_n(iterater start,iterater finish,const T& target)
+// template <class iterator,class Size,class T>
+// inline iterator uninitialized_fill_n(iterator start,iterator finish,const T& target)
 // {
 //     for(;start < finish;++ start)
 //     {
@@ -57,10 +57,10 @@ inline void destroy(iterater start,iterater finish)
 //     return start;
 // }
 
-template <class iterater,class Size,class T>
-inline iterater uninitialized_fill_n(iterater start,Size n,const T& target)
+template <class iterator,class Size,class T>
+inline iterator uninitialized_fill_n(iterator start,Size n,const T& target)
 {
-    iterater finish = start + n;
+    iterator finish = start + n;
     for(;start < finish;++ start)
     {
         construct(start,target);
@@ -77,7 +77,7 @@ class uy_vector
 public:
 
     //迭代器直接使用指针
-    typedef value_type* iterater;
+    typedef value_type* iterator;
     typedef value_type& reference;
     typedef ptrdiff_t difference_type;
     
@@ -93,8 +93,8 @@ public:
     }
 
 
-    iterater begin() {return start;}
-    iterater end() {return finish;}
+    iterator begin() {return start;}
+    iterator end() {return finish;}
     size_t size() const {return finish - start;}
     size_t capacity() const {return end_of_storage - start;}
     bool empty() const {return finish == start;}
@@ -118,7 +118,7 @@ public:
         destroy(finish);
     }
 
-    iterater erase(iterater pos)
+    iterator erase(iterator pos)
     {
         destroy(pos);
         if(pos != end() -1)copy(pos + 1,end() ,pos);
@@ -127,7 +127,7 @@ public:
         return pos;
     }
 
-    iterater erase(iterater first,iterater last)
+    iterator erase(iterator first,iterator last)
     {
         destroy(first,last);
         int i = copy(last,end(),first);
@@ -137,14 +137,14 @@ public:
     }
 
     void clear() { erase(begin(),end());}
-    void insert_aux(iterater pos,const value_type& target);
-    void insert(iterater pos,size_t n,const value_type& target);
+    void insert_aux(iterator pos,const value_type& target);
+    void insert(iterator pos,size_t n,const value_type& target);
 protected:
     //使用两级空间配置器 uy_allocator_2 封装的 simple_alloc
     typedef simple_alloc <value_type,Alloc> data_allocator;
-    iterater start;
-    iterater finish;
-    iterater end_of_storage;
+    iterator start;
+    iterator finish;
+    iterator end_of_storage;
 
     
     void deallocate()
@@ -182,7 +182,7 @@ protected:
 
 
 template <class value_type,class Alloc>
-void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& target)
+void uy_vector<value_type,Alloc> :: insert_aux(iterator pos,const value_type& target)
 {
     if(finish != end_of_storage)
     {
@@ -197,15 +197,15 @@ void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& ta
         const size_t old_size = size();
         //扩容策略采用增大为原来的两倍
         const size_t len = old_size != 0 ? (2 * old_size) : 1;
-        //iterater new_start = (iterater)malloc(sizeof(value_type)*len);
-        iterater new_start = data_allocator::allocate(len);
-        iterater new_finish = new_start;
+        //iterator new_start = (iterator)malloc(sizeof(value_type)*len);
+        iterator new_start = data_allocator::allocate(len);
+        iterator new_finish = new_start;
         //cout<<"**"<<*new_start<<"**"<<endl;
         try
         {
             new_finish = uninitialized_copy(start,pos,new_start);
             // cout<<"*"<<new_finish<<endl;
-            //iterater old_finish_pos = new_finish;
+            //iterator old_finish_pos = new_finish;
             
             construct(new_finish,target);
             //*old_finish_pos = target;
@@ -234,14 +234,14 @@ void uy_vector<value_type,Alloc> :: insert_aux(iterater pos,const value_type& ta
 
 //need test
 template <class value_type,class Alloc>
-void uy_vector<value_type,Alloc>::insert(iterater pos,size_t n,const value_type& target)
+void uy_vector<value_type,Alloc>::insert(iterator pos,size_t n,const value_type& target)
 {
     if(n != 0)
     {
         if(end_of_storage - finish >= n)
         {
             const size_t elems_after = finish - pos;
-            const iterater old_finish = finish;
+            const iterator old_finish = finish;
 
             if(elems_after > n)
             {
@@ -262,8 +262,8 @@ void uy_vector<value_type,Alloc>::insert(iterater pos,size_t n,const value_type&
         }else{
             const size_t old_size = size();
             const size_t len = capacity() + max(capacity(),n);
-            iterater new_start = data_allocator::allocate(len);
-            iterater new_finish = new_start;
+            iterator new_start = data_allocator::allocate(len);
+            iterator new_finish = new_start;
             
             try
             {
